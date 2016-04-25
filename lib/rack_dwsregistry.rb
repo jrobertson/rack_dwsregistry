@@ -54,6 +54,8 @@ class RackDwsRegistry
       Time.now.to_s + ': hello'
     end
     
+    # set_key
+    #
     post /^\/(.*)$/ do |key|
       
       val = params['v']
@@ -66,9 +68,35 @@ class RackDwsRegistry
       
       [e.xml, 'application/xml']
       
-    end            
+    end
     
-    get /^\/(.*)\?/ do |key|
+    # delete_key
+    #
+    get /^\/(.*)\?action=delete_key$/ do |key|
+
+      r = @reg.delete_key(key)
+      msg = r ? 'key deleted' : 'key not found'
+      [{delete_key: msg}.to_json, 'application/json']
+
+    end
+    
+    # get_keys
+    #
+    get /^\/(.*)\?action=get_keys$/ do |key|
+        
+      recordset = @reg.get_keys(key)
+
+      if recordset then
+        [recordset.to_doc(root: 'recordset').root.xml, 'application/xml'] 
+      else
+          [{get_keys: 'empty'}.to_json, 'application/json']
+      end
+  
+    end        
+    
+    # set_key
+    #
+    get /^\/(.*)\?v=/ do |key|
 
       val = params['v']
       
@@ -82,13 +110,15 @@ class RackDwsRegistry
 
     end    
     
+    
+    # get_key
+    #
     get /^\/(.*)$/ do |key|
-      
-      e = @reg.get_key(key)
-      
-      if e then
-        [e.xml, 'application/xml']
-      else
+
+      begin
+        e = @reg.get_key(key)
+        [e.xml, 'application/xml'] 
+      rescue
         [{get_key: 'key not found'}.to_json, 'application/json']
       end
       
