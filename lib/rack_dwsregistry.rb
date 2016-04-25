@@ -43,7 +43,7 @@ class RackDwsRegistry
     
     [status_code, {"Content-Type" => content_type}, [page_content]]
 
-	end
+  end
 
   
   protected
@@ -53,6 +53,20 @@ class RackDwsRegistry
     get '/hello' do |package,job|
       Time.now.to_s + ': hello'
     end
+    
+    post /^\/(.*)$/ do |key|
+      
+      val = params['v']
+      
+      begin
+        e = @reg.set_key(key, val)
+      rescue
+        [{set_key: ($!)}.to_json, 'application/json']
+      end
+      
+      [e.xml, 'application/xml']
+      
+    end            
     
     get /^\/(.*)\?/ do |key|
 
@@ -66,7 +80,7 @@ class RackDwsRegistry
       
       [e.xml, 'application/xml']
 
-    end
+    end    
     
     get /^\/(.*)$/ do |key|
       
@@ -83,4 +97,3 @@ class RackDwsRegistry
   end
  
 end
-
