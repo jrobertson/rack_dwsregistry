@@ -49,24 +49,20 @@ class RackDwsRegistry
   protected
 
   def default_routes(env, params={})
+    
+    # get_key('.')
+    #
+    get '/' do |key|
 
-    get '/hello' do |package,job|
-      Time.now.to_s + ': hello'
-    end
+      reg_get '.'
+      
+    end     
     
     # set_key
     #
     post /^\/(.*)$/ do |key|
       
-      val = params['v']
-      
-      begin
-        e = @reg.set_key(key, val)
-      rescue
-        [{set_key: ($!)}.to_json, 'application/json']
-      end
-      
-      [e.xml, 'application/xml']
+      reg_set key, params      
       
     end
     
@@ -98,15 +94,7 @@ class RackDwsRegistry
     #
     get /^\/(.*)\?v=/ do |key|
 
-      val = params['v']
-      
-      begin
-        e = @reg.set_key(key, val)
-      rescue
-        [{set_key: ($!)}.to_json, 'application/json']
-      end
-      
-      [e.xml, 'application/xml']
+      reg_set key, params
 
     end    
     
@@ -115,15 +103,37 @@ class RackDwsRegistry
     #
     get /^\/(.*)$/ do |key|
 
-      begin
-        e = @reg.get_key(key)
-        [e.xml, 'application/xml'] 
-      rescue
-        [{get_key: 'key not found'}.to_json, 'application/json']
-      end
+      reg_get key
       
     end    
 
   end
- 
+  
+  private
+  
+  def reg_get(key)
+    
+    begin
+      e = @reg.get_key(key)
+      [e.xml, 'application/xml'] 
+    rescue
+      [{get_key: 'key not found'}.to_json, 'application/json']
+    end
+    
+  end
+  
+  def reg_set(key, params)
+    
+    val = params['v']
+    
+    begin
+      e = @reg.set_key(key, val)
+    rescue
+      [{set_key: ($!)}.to_json, 'application/json']
+    end
+    
+    [e.xml, 'application/xml']
+    
+  end  
+  
 end
