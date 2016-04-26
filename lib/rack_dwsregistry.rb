@@ -50,6 +50,22 @@ class RackDwsRegistry
 
   def default_routes(env, params={})
     
+    # xpath
+    #
+    get /\/\?xpath=/ do
+
+      xpath = params['xpath']
+      
+      recordset = @reg.xpath(xpath)
+
+      if recordset then
+        [recordset.to_doc(root: 'recordset').root.xml, 'application/xml'] 
+      else
+          [{get_keys: 'empty'}.to_json, 'application/json']
+      end
+      
+    end         
+    
     # get_key('.')
     #
     get '/' do |key|
