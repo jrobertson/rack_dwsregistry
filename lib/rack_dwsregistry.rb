@@ -15,7 +15,8 @@ class RackDwsRegistry
   def initialize(filename='registry.xml')
 
     super() # required for app-routes initialize method to exectue
-    @reg = DWSRegistry.new(filename)
+    @filename = filename
+    load_reg()
 
   end
 
@@ -61,7 +62,7 @@ class RackDwsRegistry
       if recordset then
         [recordset.to_doc(root: 'recordset').root.xml, 'application/xml'] 
       else
-          [{get_keys: 'empty'}.to_json, 'application/json']
+          [{xpath: 'empty'}.to_json, 'application/json']
       end
       
     end         
@@ -73,6 +74,13 @@ class RackDwsRegistry
       reg_get '.'
       
     end     
+    
+    get '/refresh' do
+
+      refresh()
+      'refreshed'
+      
+    end       
     
     # set_key
     #
@@ -127,6 +135,12 @@ class RackDwsRegistry
   
   private
   
+  def load_reg()
+    @reg = DWSRegistry.new(@filename)    
+  end
+  
+  alias refresh load_reg
+  
   def reg_get(key)
     
     begin
@@ -149,6 +163,8 @@ class RackDwsRegistry
     end
     
     [e.xml, 'application/xml']
+    #{key: key, val: val}.inspect
+    
     
   end  
   

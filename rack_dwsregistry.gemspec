@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'rack_dwsregistry'
-  s.version = '0.2.2'
+  s.version = '0.2.3'
   s.summary = 'Provides dws-registry gem functionality from behind a Rack webserver.'
   s.authors = ['James Robertson']
   s.files = Dir['lib/rack_dwsregistry.rb']
