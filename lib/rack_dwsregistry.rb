@@ -3,21 +3,23 @@
 # file: rack_dwsregistry.rb
 
 
+require 'drb'
 require 'json'
+require 'rexle'
 require 'app-routes'
-require 'dws-registry'
 
 
 class RackDwsRegistry
   include AppRoutes
 
 
-  def initialize(filename='registry.xml')
-
+  def initialize(host: 'localhost', port: '59500')
+    
     super() # required for app-routes initialize method to exectue
-    @filename = filename
-    load_reg()
+    DRb.start_service
 
+    # attach to the DRb server via a URI given on the command line
+    @reg = DRbObject.new nil, "druby://#{host}:#{port}"
   end
 
   def call(env)
@@ -57,13 +59,11 @@ class RackDwsRegistry
 
       xpath = params['xpath']
       
-      recordset = @reg.xpath(xpath)
+      r = @reg.xpath(xpath)
 
-      if recordset then
-        [recordset.to_doc(root: 'recordset').root.xml, 'application/xml'] 
-      else
-          [{xpath: 'empty'}.to_json, 'application/json']
-      end
+      return [{xpath: 'empty'}.to_json, 'application/json'] if r.empty?
+      
+      [r, 'application/xml'] 
       
     end         
     
@@ -94,8 +94,7 @@ class RackDwsRegistry
     #
     get /^\/(.*)\?action=delete_key$/ do |key|
 
-      r = @reg.delete_key(key)
-      msg = r ? 'key deleted' : 'key not found'
+      msg = @reg.delete_key(key)
       [{delete_key: msg}.to_json, 'application/json']
 
     end
@@ -103,13 +102,18 @@ class RackDwsRegistry
     # get_keys
     #
     get /^\/(.*)\?action=get_keys$/ do |key|
-        
-      recordset = @reg.get_keys(key)
 
-      if recordset then
-        [recordset.to_doc(root: 'recordset').root.xml, 'application/xml'] 
-      else
-          [{get_keys: 'empty'}.to_json, 'application/json']
+      begin
+        
+        r = @reg.get_keys(key)
+        return [{get_keys: 'empty'}.to_json, 'application/json'] unless r
+        
+        [r, 'application/xml']         
+      
+      rescue
+        
+        return [{get_keys: 'key not found'}.to_json, 'application/json'] unless r
+        
       end
   
     end        
@@ -135,19 +139,24 @@ class RackDwsRegistry
   
   private
   
-  def load_reg()
-    @reg = DWSRegistry.new(@filename)    
-  end
   
-  alias refresh load_reg
+  def refresh()
+    @reg.refresh
+  end
   
   def reg_get(key)
     
     begin
-      e = @reg.get_key(key)
-      [e.xml, 'application/xml'] 
+      
+      r = @reg.get_key(key)          
+      return [{get_key: 'key not found'}.to_json, 'application/json'] if r.empty?
+      
+      [r, 'application/xml']       
+      
     rescue
-      [{get_key: 'key not found'}.to_json, 'application/json']
+      
+      return [{get_key: 'key not found'}.to_json, 'application/json']
+      
     end
     
   end
@@ -156,15 +165,10 @@ class RackDwsRegistry
     
     val = params['v']
     
-    begin
-      e = @reg.set_key(key, val)
-    rescue
-      [{set_key: ($!)}.to_json, 'application/json']
-    end
+    r, status = @reg.set_key(key, val)    
+    return [{set_key: (status)}.to_json, 'application/json'] unless r
     
-    [e.xml, 'application/xml']
-    #{key: key, val: val}.inspect
-    
+    [r, 'application/xml']
     
   end  
   
