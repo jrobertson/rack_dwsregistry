@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'rack_dwsregistry'
-  s.version = '0.3.0'
+  s.version = '0.3.1'
   s.summary = 'Provides dws-registry gem functionality from behind a Rack webserver.'
   s.authors = ['James Robertson']
   s.files = Dir['lib/rack_dwsregistry.rb']
@@ -10,6 +10,6 @@ Gem::Specification.new do |s|
   s.signing_key = '../privatekeys/rack_dwsregistry.pem'
   s.cert_chain  = ['gem-public_cert.pem']
   s.license = 'MIT'
-  s.email = 'james@r0bertson.co.uk'
+  s.email = 'james@jamesrobertson.eu'
   s.homepage = 'https://github.com/jrobertson/rack_dwsregistry'
 end

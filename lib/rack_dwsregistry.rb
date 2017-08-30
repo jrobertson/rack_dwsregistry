@@ -73,7 +73,15 @@ class RackDwsRegistry
 
       reg_get '.'
       
-    end     
+    end
+    
+    # import
+    #
+    post '/import' do
+      
+      reg_import params['s']
+      
+    end    
     
     get '/refresh' do
 
@@ -158,6 +166,15 @@ class RackDwsRegistry
       return [{get_key: 'key not found'}.to_json, 'application/json']
       
     end
+    
+  end
+  
+  def reg_import(s)
+    
+    r, status = @reg.import(s)
+    return [{import_key: (status)}.to_json, 'application/json'] unless r
+    
+    ['<import>success</import>', 'application/xml']
     
   end
   
