@@ -66,6 +66,16 @@ class RackDwsRegistry
       [r, 'application/xml'] 
       
     end         
+        
+    # e.g. register?gem=dynarex
+    #
+    #get /\/register?gem=/ do
+    get /\/register/ do      
+      
+      gem_register(params['gem'])
+      #'foo'
+      #params['gem'].inspect
+    end   
     
     # get_key('.')
     #
@@ -79,7 +89,7 @@ class RackDwsRegistry
     #
     post '/import' do
       
-      reg_import params['s']
+      reg_import params['s'].gsub(/\r/,'')
       
     end    
     
@@ -147,7 +157,18 @@ class RackDwsRegistry
   
   private
   
-  
+  def gem_register(gemfile)
+    
+    registered = @reg.gem_register(gemfile)
+    
+    if not registered then
+      return [{gem_register: 'failed'}.to_json, 'application/json'] 
+    end
+    
+    ['<gem_register>success</gem_register>', 'application/xml']
+    
+  end  
+    
   def refresh()
     @reg.refresh
   end
@@ -171,8 +192,8 @@ class RackDwsRegistry
   
   def reg_import(s)
     
-    r, status = @reg.import(s)
-    return [{import_key: (status)}.to_json, 'application/json'] unless r
+    imported = @reg.import(s)
+    return [{import_key: 'failed'}.to_json, 'application/json'] unless imported
     
     ['<import>success</import>', 'application/xml']
     
